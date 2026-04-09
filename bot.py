@@ -34,7 +34,7 @@ class BotConfig:
     
     TELEGRAM_TOKEN: Final[str] = os.getenv("TELEGRAM_TOKEN")
     
-    GEMINI_API_KEY: Final[str] = os.getenv("AI_TOKEN", "AIzaSyD6DrmbZUbHBVDAWc4qzJk82W97_OxybFQ") 
+    GEMINI_API_KEY: Final[str] = os.getenv("AI_TOKEN")
     
     SERVER_PORT: Final[int] = int(os.environ.get("PORT", 10000))
     SERVER_HOST: Final[str] = "0.0.0.0"
