@@ -30,15 +30,15 @@ except ImportError as e:
 
 
 class BotConfig:
-    """Клас для зберігання конфігураційних даних та констант"""
+    """Конфігурація проєкту"""
     
     TELEGRAM_TOKEN: Final[str] = "8358189004:AAGXHLxR-LIVK9IvB3tIiehQV6dJirms-vs"
-    GEMINI_API_KEY: Final[str] = "AIzaSyB3wjKF11nAI7LwMOIuZE2zRBfUwJuqaCc"
+    
+    
+    GEMINI_API_KEY: Final[str] = os.getenv("AI_TOKEN") 
     
     SERVER_PORT: Final[int] = int(os.environ.get("PORT", 10000))
     SERVER_HOST: Final[str] = "0.0.0.0"
-    
-    LOG_FORMAT: Final[str] = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     
     DEVELOPER_NAME: Final[str] = "Дмитро Васильчик"
     GROUP_CODE: Final[str] = "ІПЗ-111"
