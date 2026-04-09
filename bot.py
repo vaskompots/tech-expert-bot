@@ -91,34 +91,28 @@ async def run_internal_server():
 
 async def call_gemini_api(prompt_text: str) -> str:
     
-    models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash']
+    model_name = 'gemini-1.5-flash'
     
-    system_context = "Ти професійний тех-експерт. Твої відповіді мають бути українською мовою."
+    system_context = "Ти професійний тех-експерт. Відповідай українською мовою."
     full_prompt = f"{system_context}\n\nКористувач запитує: {prompt_text}"
 
-    last_error = ""
-
-    for model_name in models_to_try:
-        try:
-            response = ai_client.models.generate_content(
-                model=model_name,
-                contents=full_prompt
-            )
-            if response and response.text:
-                return response.text
-        except Exception as e:
-            last_error = str(e)
+    try:
+        
+        await asyncio.sleep(1.5) 
+        
+        response = ai_client.models.generate_content(
+            model=model_name,
+            contents=full_prompt
+        )
+        if response and response.text:
+            return response.text
+    except Exception as e:
+        error_str = str(e)
+        if "429" in error_str:
+            return "⚠️ **Сервер ШІ тимчасово перевантажений.** Спробуйте через 30-60 секунд."
+        logger.error(f"Помилка ШІ: {e}")
             
-            if "429" in last_error:
-                return "⚠️ **Сервер ШІ перевантажений.** Зачекайте 60 секунд."
-            
-            if "404" in last_error:
-                continue
-            logger.error(f"Помилка {model_name}: {last_error}")
-            
-    
-    return f"❌ **ПОМИЛКА ШІ:**\n`{last_error}`\n\n_Перевірте API_TOKEN на Render!_"
-
+    return "❌ На жаль, зараз не вдалося зв'язатися з ШІ. Спробуйте пізніше."
 
 @dp.message(Command("start"))
 async def start_handler(message: types.Message):
