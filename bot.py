@@ -143,15 +143,32 @@ async def help_prompts_handler(message: types.Message):
 
 
 async def call_gemini_api(prompt_text: str) -> str:
-    """Універсальна функція для запитів до Google Gemini API"""
-    try:
-        system_context = "Ти професійний тех-експерт. Твої відповіді мають бути структуровані, українською мовою, з конкретними цифрами."
-        full_prompt = f"{system_context}\n\nКористувач запитує: {prompt_text}"
+    
+    models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash']
+    
+    system_context = "Ти професійний тех-експерт. Твої відповіді мають бути чіткими та корисними."
+    full_prompt = f"{system_context}\n\nКористувач запитує: {prompt_text}"
+
+    for model_name in models_to_try:
+        try:
+            response = ai_client.models.generate_content(
+                model=model_name,
+                contents=full_prompt
+            )
+            if response and response.text:
+                return response.text
+        except Exception as e:
+            error_str = str(e)
+            
+            if "429" in error_str:
+                return "⚠️ **Сервер ШІ перевантажений.**\nGoogle обмежив кількість безкоштовних запитів. Будь ласка, зачекайте 30-60 секунд і спробуйте ще раз."
         
-        response = ai_client.models.generate_content(
-            model='gemini-1.5-flash', 
-            contents=full_prompt
-        )
+            if "404" in error_str:
+                continue
+    
+            logger.error(f"Помилка моделі {model_name}: {e}")
+            
+    return "❌ На жаль, зараз не вдалося зв'язатися з ШІ. Спробуйте пізніше."
         return response.text if response.text else "⚠️ ШІ не зміг згенерувати відповідь."
     except Exception as api_err:
         logger.error(f"Помилка API: {api_err}")
