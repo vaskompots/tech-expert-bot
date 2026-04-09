@@ -149,7 +149,7 @@ async def call_gemini_api(prompt_text: str) -> str:
         full_prompt = f"{system_context}\n\nКористувач запитує: {prompt_text}"
         
         response = ai_client.models.generate_content(
-            model='gemini-2.0-flash', 
+            model='gemini-1.5-flash', 
             contents=full_prompt
         )
         return response.text if response.text else "⚠️ ШІ не зміг згенерувати відповідь."
