@@ -91,15 +91,14 @@ async def run_internal_server():
     logger.info(f"Внутрішній сервер моніторингу запущено на порту {BotConfig.SERVER_PORT}")
 
 async def call_gemini_api(prompt_text: str) -> str:
+    model_name = 'gemini-1.5-flash-8b'
     
-    model_name = 'gemini-2.0-flash'
-    
-    system_context = "Ти професійний тех-експерт. Відповідай українською мовою."
+    system_context = "Ти професійний тех-експерт. Відповідай коротко і українською."
     full_prompt = f"{system_context}\n\nКористувач запитує: {prompt_text}"
 
     try:
         
-        await asyncio.sleep(1.5) 
+        await asyncio.sleep(1) 
         
         response = ai_client.models.generate_content(
             model=model_name,
@@ -107,11 +106,13 @@ async def call_gemini_api(prompt_text: str) -> str:
         )
         if response and response.text:
             return response.text
+            
     except Exception as e:
-        error_str = str(e)
-       except Exception as e:
-        
+        #
+        logger.error(f"Помилка ШІ: {e}")
         return f"🛑 ТЕХНІЧНА ПОМИЛКА GOOGLE:\n{str(e)}"
+            
+    return "❌ На жаль, зараз не вдалося отримати відповідь."
         logger.error(f"Помилка ШІ: {e}")
             
     return "❌ На жаль, зараз не вдалося зв'язатися з ШІ. Спробуйте пізніше."
