@@ -34,7 +34,7 @@ class BotConfig:
     
     TELEGRAM_TOKEN: Final[str] = "8358189004:AAGXHLxR-LIVK9IvB3tIiehQV6dJirms-vs"
     
-    GEMINI_API_KEY: Final[str] = os.getenv("AI_TOKEN", "AIzaSyB3wjKF11nAI7LwMOIuZE2zRBfUwJuqaCc") 
+    GEMINI_API_KEY: Final[str] = os.getenv("AI_TOKEN", "AIzaSyD6DrmbZUbHBVDAWc4qzJk82W97_OxybFQ") 
     
     SERVER_PORT: Final[int] = int(os.environ.get("PORT", 10000))
     SERVER_HOST: Final[str] = "0.0.0.0"
@@ -90,7 +90,7 @@ async def run_internal_server():
     logger.info(f"Внутрішній сервер моніторингу запущено на порту {BotConfig.SERVER_PORT}")
 
 async def call_gemini_api(prompt_text: str) -> str:
-    # Пробуємо моделі. Можна додати 'models/' для надійності
+    
     models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash']
     
     system_context = "Ти професійний тех-експерт. Твої відповіді мають бути українською мовою."
@@ -108,15 +108,15 @@ async def call_gemini_api(prompt_text: str) -> str:
                 return response.text
         except Exception as e:
             last_error = str(e)
-            # Якщо ліміт (429), одразу кажемо користувачу
+            
             if "429" in last_error:
                 return "⚠️ **Сервер ШІ перевантажений.** Зачекайте 60 секунд."
-            # Якщо 404, просто йдемо до наступної моделі
+            
             if "404" in last_error:
                 continue
             logger.error(f"Помилка {model_name}: {last_error}")
             
-    # ЯКЩО НІЧОГО НЕ СПРАЦЮВАЛО — ВИВОДИМО РЕАЛЬНУ ПОМИЛКУ ДЛЯ ДЕБАГУ
+    
     return f"❌ **ПОМИЛКА ШІ:**\n`{last_error}`\n\n_Перевірте API_TOKEN на Render!_"
 
 
