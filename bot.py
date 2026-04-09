@@ -91,6 +91,7 @@ async def run_internal_server():
     logger.info(f"Внутрішній сервер моніторингу запущено на порту {BotConfig.SERVER_PORT}")
 
 async def call_gemini_api(prompt_text: str) -> str:
+    
     model_name = 'gemini-1.5-flash-8b'
     
     system_context = "Ти професійний тех-експерт. Відповідай коротко і українською."
@@ -104,18 +105,16 @@ async def call_gemini_api(prompt_text: str) -> str:
             model=model_name,
             contents=full_prompt
         )
+        
         if response and response.text:
             return response.text
             
     except Exception as e:
-        #
+        
         logger.error(f"Помилка ШІ: {e}")
         return f"🛑 ТЕХНІЧНА ПОМИЛКА GOOGLE:\n{str(e)}"
             
-    return "❌ На жаль, зараз не вдалося отримати відповідь."
-        logger.error(f"Помилка ШІ: {e}")
-            
-    return "❌ На жаль, зараз не вдалося зв'язатися з ШІ. Спробуйте пізніше."
+    return "❌ На жаль, зараз не вдалося отримати відповідь від ШІ."
 
 @dp.message(Command("start"))
 async def start_handler(message: types.Message):
