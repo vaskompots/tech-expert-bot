@@ -91,7 +91,7 @@ async def run_internal_server():
 
 async def call_gemini_api(prompt_text: str) -> str:
     
-    model_name = 'gemini-1.5-flash'
+    model_name = 'gemini-2.0-flash'
     
     system_context = "Ти професійний тех-експерт. Відповідай українською мовою."
     full_prompt = f"{system_context}\n\nКористувач запитує: {prompt_text}"
