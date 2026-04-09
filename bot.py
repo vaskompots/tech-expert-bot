@@ -74,6 +74,7 @@ def get_inline_support() -> InlineKeyboardMarkup:
 
 
 async def health_check_handler(request):
+    return web.Response(text="Bot is alive!", status=200)
     """Обробник запитів від сервісу Render для підтримки активності"""
     logger.info("Health check request received")
     uptime = str(datetime.now() - start_timestamp).split('.')[0]
@@ -85,7 +86,7 @@ async def run_internal_server():
     app.router.add_get("/", health_check_handler)
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, BotConfig.SERVER_HOST, BotConfig.SERVER_PORT)
+    site = web.TCPSite(runner, host=BotConfig.SERVER_HOST, port=BotConfig.SERVER_PORT)
     await site.start()
     logger.info(f"Внутрішній сервер моніторингу запущено на порту {BotConfig.SERVER_PORT}")
 
