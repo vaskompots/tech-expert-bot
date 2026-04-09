@@ -233,7 +233,7 @@ async def main():
     
     try:
         await bot.delete_webhook(drop_pending_updates=True)
-        await dp.start_polling(bot)
+       await dp.start_polling(bot, skip_updates=True)
     except Exception as run_error:
         logger.critical(f"Критична помилка виконання: {run_error}")
     finally:
