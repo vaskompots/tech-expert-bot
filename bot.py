@@ -89,13 +89,14 @@ async def run_internal_server():
     await site.start()
     logger.info(f"Внутрішній сервер моніторингу запущено на порту {BotConfig.SERVER_PORT}")
 
-
 async def call_gemini_api(prompt_text: str) -> str:
-    """Функція для звернення до Gemini з обробкою помилок та квот"""
+    # Пробуємо моделі. Можна додати 'models/' для надійності
     models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash']
     
-    system_context = "Ти професійний тех-експерт. Твої відповіді мають бути українською, чіткими та професійними."
+    system_context = "Ти професійний тех-експерт. Твої відповіді мають бути українською мовою."
     full_prompt = f"{system_context}\n\nКористувач запитує: {prompt_text}"
+
+    last_error = ""
 
     for model_name in models_to_try:
         try:
@@ -106,14 +107,17 @@ async def call_gemini_api(prompt_text: str) -> str:
             if response and response.text:
                 return response.text
         except Exception as e:
-            error_str = str(e)
-            if "429" in error_str:
-                return "⚠️ **Сервер ШІ перевантажений (ліміт запитів).**\nБудь ласка, зачекайте 30-60 секунд."
-            if "404" in error_str:
-                continue 
-            logger.error(f"Помилка моделі {model_name}: {e}")
+            last_error = str(e)
+            # Якщо ліміт (429), одразу кажемо користувачу
+            if "429" in last_error:
+                return "⚠️ **Сервер ШІ перевантажений.** Зачекайте 60 секунд."
+            # Якщо 404, просто йдемо до наступної моделі
+            if "404" in last_error:
+                continue
+            logger.error(f"Помилка {model_name}: {last_error}")
             
-    return "❌ На жаль, зараз не вдалося зв'язатися з ШІ. Спробуйте пізніше."
+    # ЯКЩО НІЧОГО НЕ СПРАЦЮВАЛО — ВИВОДИМО РЕАЛЬНУ ПОМИЛКУ ДЛЯ ДЕБАГУ
+    return f"❌ **ПОМИЛКА ШІ:**\n`{last_error}`\n\n_Перевірте API_TOKEN на Render!_"
 
 
 @dp.message(Command("start"))
