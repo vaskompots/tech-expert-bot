@@ -32,7 +32,7 @@ except ImportError as e:
 class BotConfig:
     """Клас для зберігання конфігураційних даних та констант"""
     
-    TELEGRAM_TOKEN: Final[str] = "8358189004:AAGXHLxR-LIVK9IvB3tIiehQV6dJirms-vs"
+    TELEGRAM_TOKEN: Final[str] = os.getenv("TELEGRAM_TOKEN")
     
     GEMINI_API_KEY: Final[str] = os.getenv("AI_TOKEN", "AIzaSyD6DrmbZUbHBVDAWc4qzJk82W97_OxybFQ") 
     
