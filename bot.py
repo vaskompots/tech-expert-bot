@@ -109,8 +109,9 @@ async def call_gemini_api(prompt_text: str) -> str:
             return response.text
     except Exception as e:
         error_str = str(e)
-        if "429" in error_str:
-            return "⚠️ **Сервер ШІ тимчасово перевантажений.** Спробуйте через 30-60 секунд."
+       except Exception as e:
+        
+        return f"🛑 ТЕХНІЧНА ПОМИЛКА GOOGLE:\n{str(e)}"
         logger.error(f"Помилка ШІ: {e}")
             
     return "❌ На жаль, зараз не вдалося зв'язатися з ШІ. Спробуйте пізніше."
