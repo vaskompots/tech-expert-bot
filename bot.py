@@ -33,7 +33,7 @@ class BotConfig:
     """Клас для зберігання конфігураційних даних та констант"""
     
     TELEGRAM_TOKEN: Final[str] = "8358189004:AAGXHLxR-LIVK9IvB3tIiehQV6dJirms-vs"
-    GEMINI_API_KEY: Final[str] = "AIzaSyBptOgsF6jpdVXTSCNVkUKKprlyAno-7cQ"
+    GEMINI_API_KEY: Final[str] = "AIzaSyB3wjKF11nAI7LwMOIuZE2zRBfUwJuqaCc"
     
     SERVER_PORT: Final[int] = int(os.environ.get("PORT", 10000))
     SERVER_HOST: Final[str] = "0.0.0.0"
