@@ -21,8 +21,7 @@ try:
         ReplyKeyboardMarkup, 
         KeyboardButton, 
         InlineKeyboardMarkup, 
-        InlineKeyboardButton,
-        ReplyKeyboardRemove
+        InlineKeyboardButton
     )
     from aiogram.enums import ChatAction
 except ImportError as e:
@@ -36,13 +35,10 @@ class BotConfig:
     TELEGRAM_TOKEN: Final[str] = "8358189004:AAGXHLxR-LIVK9IvB3tIiehQV6dJirms-vs"
     GEMINI_API_KEY: Final[str] = "AIzaSyBptOgsF6jpdVXTSCNVkUKKprlyAno-7cQ"
     
-    
     SERVER_PORT: Final[int] = int(os.environ.get("PORT", 10000))
     SERVER_HOST: Final[str] = "0.0.0.0"
     
-
     LOG_FORMAT: Final[str] = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    
     
     DEVELOPER_NAME: Final[str] = "Дмитро Васильчик"
     GROUP_CODE: Final[str] = "ІПЗ-111"
@@ -74,10 +70,12 @@ def get_inline_support() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=inline_kb)
 
 
+
 async def health_check_handler(request):
     """Обробник запитів від сервісу Render для підтримки активності"""
     logger.info("Health check request received")
-    return web.Response(text=f"TechExpertBot is Live! System Uptime: {datetime.now() - start_timestamp}")
+    uptime = str(datetime.now() - start_timestamp).split('.')[0]
+    return web.Response(text=f"TechExpertBot is Live! System Uptime: {uptime}")
 
 async def run_internal_server():
     """Запуск легкого веб-сервера паралельно з ботом"""
@@ -89,64 +87,12 @@ async def run_internal_server():
     await site.start()
     logger.info(f"Внутрішній сервер моніторингу запущено на порту {BotConfig.SERVER_PORT}")
 
-@dp.message(Command("start"))
-async def start_handler(message: types.Message):
-    """Обробка стартової команди"""
-    welcome_text = (
-        f"🌟 **Вітаю, {message.from_user.full_name}!**\n\n"
-        "Я — інтелектуальна система аналізу комп'ютерної техніки.\n"
-        "Використовую Gemini AI для надання професійних порад.\n\n"
-        "Оберіть категорію нижче для початку роботи:"
-    )
-    await message.answer(welcome_text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
-
-@dp.message(F.text == "📊 Статус системи")
-async def status_handler(message: types.Message):
-    """Вивід технічної інформації про роботу бота"""
-    current_uptime = str(datetime.now() - start_timestamp).split('.')[0]
-    status_msg = (
-        "📈 **ТЕХНІЧНИЙ МОНІТОР**\n"
-        "--------------------------\n"
-        f"✅ Статус: Працює коректно\n"
-        f"🤖 Модель ШІ: Gemini 2.0 Flash\n"
-        f"⏱ Час безперервної роботи: {current_uptime}\n"
-        f"📅 Поточний час (Одеса): {datetime.now().strftime('%H:%M:%S')}\n"
-        "--------------------------"
-    )
-    await message.answer(status_msg, parse_mode="Markdown")
-
-@dp.message(F.text == "ℹ️ Про розробника")
-async def developer_info_handler(message: types.Message):
-    """Інформація про автора проєкту для курсової роботи"""
-    info_card = (
-        "🎓 **КАРТКА КУРСОВОГО ПРОЄКТУ**\n"
-        "--------------------------\n"
-        f"👤 Розробник: {BotConfig.DEVELOPER_NAME}\n"
-        f"🏫 Навчальна група: {BotConfig.GROUP_CODE}\n"
-        f"🔢 Варіант завдання: {BotConfig.VARIANT_NUM}\n"
-        "📍 Місце розробки: Одеса, Україна\n"
-        "--------------------------"
-    )
-    await message.answer(info_card, parse_mode="Markdown")
-
-@dp.message(F.text.in_({"💻 ПК", "📱 Телефон", "🎮 Консоль", "🎯 Підібрати техніку", "💰 Оцінити техніку"}))
-async def help_prompts_handler(message: types.Message):
-    """Надання інструкцій користувачу залежно від обраної категорії"""
-    guide = {
-        "💻 ПК": "📝 **ФОРМАТ:** ПК [Процесор, Відеокарта, ОЗП]\n*Приклад: ПК Core i7-13700, RTX 4070, 32GB*",
-        "📱 Телефон": "📝 **ФОРМАТ:** Телефон [Модель]\n*Приклад: Телефон iPhone 15 Pro*",
-        "🎮 Консоль": "📝 **ФОРМАТ:** Консоль [Назва]\n*Приклад: Консоль Steam Deck OLED*",
-        "🎯 Підібрати техніку": "📝 **ФОРМАТ:** Підбери [що саме] [бюджет]\n*Приклад: Підбери ноутбук для програмування до 45000 грн*",
-        "💰 Оцінити техніку": "📝 **ФОРМАТ:** Оціни [ваше залізо]\n*Приклад: Оціни відеокарту GTX 1060 6GB*"
-    }
-    await message.answer(guide[message.text], parse_mode="Markdown")
-
 
 async def call_gemini_api(prompt_text: str) -> str:
-    
+    """Функція для звернення до Gemini з обробкою помилок та квот"""
     models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash']
     
-    system_context = "Ти професійний тех-експерт. Твої відповіді мають бути чіткими та корисними."
+    system_context = "Ти професійний тех-експерт. Твої відповіді мають бути українською, чіткими та професійними."
     full_prompt = f"{system_context}\n\nКористувач запитує: {prompt_text}"
 
     for model_name in models_to_try:
@@ -160,27 +106,64 @@ async def call_gemini_api(prompt_text: str) -> str:
         except Exception as e:
             error_str = str(e)
             if "429" in error_str:
-                return "⚠️ **Сервер ШІ перевантажений (ліміт запитів).**\nБудь ласка, зачекайте 30-60 секунд і спробуйте ще раз."
+                return "⚠️ **Сервер ШІ перевантажений (ліміт запитів).**\nБудь ласка, зачекайте 30-60 секунд."
             if "404" in error_str:
-                continue
+                continue 
             logger.error(f"Помилка моделі {model_name}: {e}")
             
     return "❌ На жаль, зараз не вдалося зв'язатися з ШІ. Спробуйте пізніше."
-        
-            if "404" in error_str:
-                continue
-    
-            logger.error(f"Помилка моделі {model_name}: {e}")
-            
-    return "❌ На жаль, зараз не вдалося зв'язатися з ШІ. Спробуйте пізніше."
-        return response.text if response.text else "⚠️ ШІ не зміг згенерувати відповідь."
-    except Exception as api_err:
-        logger.error(f"Помилка API: {api_err}")
-        return f"❌ Вибачте, сталася технічна помилка при з'єднанні з мізками ШІ: {api_err}"
+
+
+@dp.message(Command("start"))
+async def start_handler(message: types.Message):
+    welcome_text = (
+        f"🌟 **Вітаю, {message.from_user.full_name}!**\n\n"
+        "Я — інтелектуальна система аналізу комп'ютерної техніки.\n"
+        "Використовую Gemini AI для надання професійних порад.\n\n"
+        "Оберіть категорію нижче для початку роботи:"
+    )
+    await message.answer(welcome_text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
+
+@dp.message(F.text == "📊 Статус системи")
+async def status_handler(message: types.Message):
+    current_uptime = str(datetime.now() - start_timestamp).split('.')[0]
+    status_msg = (
+        "📈 **ТЕХНІЧНИЙ МОНІТОР**\n"
+        "--------------------------\n"
+        f"✅ Статус: Працює коректно\n"
+        f"🤖 Модель ШІ: Gemini Hybrid (2.0/1.5)\n"
+        f"⏱ Час безперервної роботи: {current_uptime}\n"
+        f"📅 Поточний час: {datetime.now().strftime('%H:%M:%S')}\n"
+        "--------------------------"
+    )
+    await message.answer(status_msg, parse_mode="Markdown")
+
+@dp.message(F.text == "ℹ️ Про розробника")
+async def developer_info_handler(message: types.Message):
+    info_card = (
+        "🎓 **КАРТКА КУРСОВОГО ПРОЄКТУ**\n"
+        "--------------------------\n"
+        f"👤 Розробник: {BotConfig.DEVELOPER_NAME}\n"
+        f"🏫 Навчальна група: {BotConfig.GROUP_CODE}\n"
+        f"🔢 Варіант завдання: {BotConfig.VARIANT_NUM}\n"
+        "📍 Місце розробки: Одеса, Україна\n"
+        "--------------------------"
+    )
+    await message.answer(info_card, parse_mode="Markdown")
+
+@dp.message(F.text.in_({"💻 ПК", "📱 Телефон", "🎮 Консоль", "🎯 Підібрати техніку", "💰 Оцінити техніку"}))
+async def help_prompts_handler(message: types.Message):
+    guide = {
+        "💻 ПК": "📝 **ФОРМАТ:** ПК [Процесор, Відеокарта, ОЗП]\n*Приклад: ПК Core i7-13700, RTX 4070, 32GB*",
+        "📱 Телефон": "📝 **ФОРМАТ:** Телефон [Модель]\n*Приклад: Телефон iPhone 15 Pro*",
+        "🎮 Консоль": "📝 **ФОРМАТ:** Консоль [Назва]\n*Приклад: Консоль Steam Deck OLED*",
+        "🎯 Підібрати техніку": "📝 **ФОРМАТ:** Підбери [що саме] [бюджет]\n*Приклад: Підбери ноутбук для програмування до 45000 грн*",
+        "💰 Оцінити техніку": "📝 **ФОРМАТ:** Оціни [ваше залізо]\n*Приклад: Оціни відеокарту GTX 1060 6GB*"
+    }
+    await message.answer(guide[message.text], parse_mode="Markdown")
 
 @dp.message(F.text.lower().startswith("пк "))
 async def analyze_pc_handler(message: types.Message):
-    """Аналіз комплектуючих ПК та прогноз FPS"""
     user_input = message.text[3:].strip()
     if not user_input:
         return await message.answer("⚠️ Будь ласка, вкажіть параметри ПК!")
@@ -198,7 +181,6 @@ async def analyze_pc_handler(message: types.Message):
 
 @dp.message(F.text.lower().startswith("підбери "))
 async def picking_handler(message: types.Message):
-    """Підбір техніки на основі бюджету"""
     user_query = message.text[8:].strip()
     if len(user_query) < 5:
         return await message.answer("⚠️ Опишіть ваш запит детальніше (наприклад: 'ноутбук до 30к').")
@@ -214,7 +196,6 @@ async def picking_handler(message: types.Message):
 
 @dp.message(F.text.lower().startswith("оціни "))
 async def valuation_handler(message: types.Message):
-    """Оцінка ринкової вартості вживаної техніки"""
     item = message.text[6:].strip()
     if not item:
         return await message.answer("⚠️ Вкажіть, що саме треба оцінити!")
@@ -230,7 +211,6 @@ async def valuation_handler(message: types.Message):
 
 @dp.message(F.text)
 async def generic_ai_handler(message: types.Message):
-    """Обробка будь-яких інших запитів через Gemini"""
     await message.bot.send_chat_action(chat_id=message.chat.id, action=ChatAction.TYPING)
     response = await call_gemini_api(message.text)
     await message.answer(response)
@@ -238,9 +218,10 @@ async def generic_ai_handler(message: types.Message):
 
 async def main():
     """Головна функція запуску бота та супутніх сервісів"""
+    
     asyncio.create_task(run_internal_server())
     
-    # 2. Ініціалізація бота
+
     bot = Bot(token=BotConfig.TELEGRAM_TOKEN)
     
     logger.info("==========================================")
@@ -248,9 +229,7 @@ async def main():
     logger.info(f"Розробник: {BotConfig.DEVELOPER_NAME}")
     logger.info("==========================================")
     
-
     try:
-        
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
     except Exception as run_error:
