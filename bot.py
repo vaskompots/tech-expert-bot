@@ -159,9 +159,13 @@ async def call_gemini_api(prompt_text: str) -> str:
                 return response.text
         except Exception as e:
             error_str = str(e)
-            
             if "429" in error_str:
-                return "⚠️ **Сервер ШІ перевантажений.**\nGoogle обмежив кількість безкоштовних запитів. Будь ласка, зачекайте 30-60 секунд і спробуйте ще раз."
+                return "⚠️ **Сервер ШІ перевантажений (ліміт запитів).**\nБудь ласка, зачекайте 30-60 секунд і спробуйте ще раз."
+            if "404" in error_str:
+                continue
+            logger.error(f"Помилка моделі {model_name}: {e}")
+            
+    return "❌ На жаль, зараз не вдалося зв'язатися з ШІ. Спробуйте пізніше."
         
             if "404" in error_str:
                 continue
